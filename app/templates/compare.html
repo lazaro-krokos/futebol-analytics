@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Comparar{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-arrow-left-right"></i> Comparar</h1>
+        <p class="text-muted">Compare jogadores e times lado a lado</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-person"></i> Comparar Jogadores</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Selecione até 4 jogadores:</label>
+                    <select class="form-select mb-2" id="player1">
+                        <option value="">Selecione Jogador 1</option>
+                        {% for player in players %}
+                        <option value="{{ player.id }}">{{ player.name }} - {{ player.team.name if player.team else '' }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select mb-2" id="player2">
+                        <option value="">Selecione Jogador 2</option>
+                        {% for player in players %}
+                        <option value="{{ player.id }}">{{ player.name }} - {{ player.team.name if player.team else '' }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select mb-2" id="player3">
+                        <option value="">Selecione Jogador 3 (opcional)</option>
+                        {% for player in players %}
+                        <option value="{{ player.id }}">{{ player.name }} - {{ player.team.name if player.team else '' }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select mb-2" id="player4">
+                        <option value="">Selecione Jogador 4 (opcional)</option>
+                        {% for player in players %}
+                        <option value="{{ player.id }}">{{ player.name }} - {{ player.team.name if player.team else '' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn btn-primary w-100" onclick="comparePlayers()">
+                    <i class="bi bi-compass"></i> Comparar Jogadores
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-trophy"></i> Comparar Times</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Selecione 2 times:</label>
+                    <select class="form-select mb-2" id="team1">
+                        <option value="">Selecione Time 1</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}">{{ team.name }} - {{ team.league.name if team.league else '' }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select mb-2" id="team2">
+                        <option value="">Selecione Time 2</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}">{{ team.name }} - {{ team.league.name if team.league else '' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="btn btn-primary w-100" onclick="compareTeams()">
+                    <i class="bi bi-compass"></i> Comparar Times
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-bar-chart"></i> Resultado da Comparação</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center" id="comparisonPlaceholder">
+                    <p class="text-muted">Selecione os itens para comparar acima</p>
+                    <i class="bi bi-arrow-up display-4 text-muted"></i>
+                </div>
+                <div id="comparisonResults" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function comparePlayers() {
+    const players = [];
+    for (let i = 1; i <= 4; i++) {
+        const playerId = document.getElementById(`player${i}`).value;
+        if (playerId) players.push(playerId);
+    }
+    
+    if (players.length < 2) {
+        alert('Selecione pelo menos 2 jogadores');
+        return;
+    }
+    
+    document.getElementById('comparisonPlaceholder').style.display = 'none';
+    const resultsDiv = document.getElementById('comparisonResults');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = `
+        <div class="alert alert-info">
+            Comparando ${players.length} jogadores...
+            <div class="spinner-border spinner-border-sm ms-2" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        showPlayerComparison(players);
+    }, 1000);
+}
+
+function compareTeams() {
+    const team1 = document.getElementById('team1').value;
+    const team2 = document.getElementById('team2').value;
+    
+    if (!team1 || !team2) {
+        alert('Selecione 2 times');
+        return;
+    }
+    
+    if (team1 === team2) {
+        alert('Selecione times diferentes');
+        return;
+    }
+    
+    document.getElementById('comparisonPlaceholder').style.display = 'none';
+    const resultsDiv = document.getElementById('comparisonResults');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = `
+        <div class="alert alert-info">
+            Comparando 2 times...
+            <div class="spinner-border spinner-border-sm ms-2" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        showTeamComparison(team1, team2);
+    }, 1000);
+}
+
+function showPlayerComparison(playerIds) {
+    const resultsDiv = document.getElementById('comparisonResults');
+    
+    const comparisonData = [
+        { stat: 'Gols', values: [25, 22, 18, 15] },
+        { stat: 'Assistências', values: [12, 15, 10, 8] },
+        { stat: 'xG', values: [22.5, 20.1, 16.8, 14.2] },
+        { stat: 'Jogos', values: [38, 35, 32, 30] },
+        { stat: 'Minutos', values: [3420, 3150, 2880, 2700] }
+    ];
+    
+    let html = '<div class="table-responsive"><table class="table table-striped">';
+    html += '<thead><tr><th>Estatística</th>';
+    
+    for (let i = 0; i < playerIds.length; i++) {
+        html += `<th>Jogador ${i + 1}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+    
+    comparisonData.forEach(row => {
+        html += `<tr><td>${row.stat}</td>`;
+        row.values.slice(0, playerIds.length).forEach(value => {
+            html += `<td>${value}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table></div>';
+    resultsDiv.innerHTML = html;
+}
+
+function showTeamComparison(team1Id, team2Id) {
+    const resultsDiv = document.getElementById('comparisonResults');
+    
+    const comparisonData = [
+        { stat: 'Total Gols', values: [65, 48] },
+        { stat: 'Total Assistências', values: [45, 32] },
+        { stat: 'Média xG', values: [1.71, 1.26] },
+        { stat: 'Jogadores', values: [25, 23] },
+        { stat: 'Vitórias', values: [22, 15] },
+        { stat: 'Derrotas', values: [4, 10] }
+    ];
+    
+    let html = '<div class="table-responsive"><table class="table table-striped">';
+    html += '<thead><tr><th>Estatística</th><th>Time 1</th><th>Time 2</th></tr></thead><tbody>';
+    
+    comparisonData.forEach(row => {
+        const diff = row.values[0] - row.values[1];
+        const diffClass = diff > 0 ? 'text-success' : diff < 0 ? 'text-danger' : '';
+        const diffSymbol = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+        
+        html += `<tr>
+            <td>${row.stat}</td>
+            <td>
+                ${row.values[0]}
+                <span class="${diffClass}">${diffSymbol} ${Math.abs(diff)}</span>
+            </td>
+            <td>${row.values[1]}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table></div>';
+    resultsDiv.innerHTML = html;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+        <p class="text-muted">Estatísticas e métricas avançadas de futebol</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('main.export_players') }}">Jogadores (Excel)</a></li>
+                <li><a class="dropdown-item" href="#">Times (Excel)</a></li>
+                <li><a class="dropdown-item" href="#">Estatísticas (PDF)</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title display-6">{{ total_players }}</h5>
+                <p class="card-text"><i class="bi bi-people"></i> Jogadores</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title display-6">{{ total_teams }}</h5>
+                <p class="card-text"><i class="bi bi-trophy"></i> Times</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title display-6">{{ total_leagues }}</h5>
+                <p class="card-text"><i class="bi bi-globe"></i> Ligas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h5 class="card-title display-6">{{ total_matches }}</h5>
+                <p class="card-text"><i class="bi bi-calendar-event"></i> Partidas</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-graph-up"></i> Top Artilheiros</h5>
+                <small class="text-muted">Temporada 2023-2024</small>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="topScorersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-bar-chart"></i> Evolução de Desempenho</h5>
+                <small class="text-muted">Últimas 5 temporadas</small>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-star"></i> Jogadores em Destaque</h5>
+                <a href="{{ url_for('main.players') }}" class="btn btn-sm btn-outline-primary">
+                    Ver Todos <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Jogador</th>
+                                <th>Time</th>
+                                <th>Posição</th>
+                                <th>Gols</th>
+                                <th>Assistências</th>
+                                <th>xG</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in players[:10] %}
+                            <tr>
+                                <td>{{ player.name }}</td>
+                                <td>{{ player.team.name if player.team else '-' }}</td>
+                                <td>
+                                    {% if player.position == 'GK' %}
+                                    <span class="badge bg-secondary">Goleiro</span>
+                                    {% elif player.position == 'DF' %}
+                                    <span class="badge bg-info">Defensor</span>
+                                    {% elif player.position == 'MF' %}
+                                    <span class="badge bg-success">Meio-campista</span>
+                                    {% elif player.position == 'FW' %}
+                                    <span class="badge bg-danger">Atacante</span>
+                                    {% else %}
+                                    <span class="badge bg-dark">{{ player.position }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ player.stats[-1].goals if player.stats else 0 }}</td>
+                                <td>{{ player.stats[-1].assists if player.stats else 0 }}</td>
+                                <td>{{ player.stats[-1].xg if player.stats else 0 }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="viewPlayerStats({{ player.id }})">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="bi bi-lightning"></i> Acesso Rápido</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{{ url_for('main.advanced_stats') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-bar-chart"></i> Estatísticas Avançadas
+                    </a>
+                    <a href="{{ url_for('main.compare') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-arrow-left-right"></i> Comparar Jogadores
+                    </a>
+                    <a href="{{ url_for('main.export_players') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-download"></i> Exportar Dados
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="bi bi-info-circle"></i> Sistema de Atualização</h6>
+            </div>
+            <div class="card-body">
+                <p>O sistema atualiza automaticamente os dados:</p>
+                <ul>
+                    <li><strong>Diariamente:</strong> 02:00 AM</li>
+                    <li><strong>Semanalmente:</strong> Domingo 04:00 AM</li>
+                </ul>
+                <p class="text-muted">Dados coletados do FBref.com</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="manualUpdate()">
+                    <i class="bi bi-arrow-clockwise"></i> Atualizar Agora
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Top Artilheiros
+    fetch('/api/top_scorers')
+        .then(response => response.json())
+        .then(data => {
+            const ctx1 = document.getElementById('topScorersChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: data.slice(0, 5).map(p => p.name.split(' ')[0]),
+                    datasets: [{
+                        label: 'Gols',
+                        data: data.slice(0, 5).map(p => p.goals),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        });
+
+    // Gráfico de Performance
+    const ctx2 = document.getElementById('performanceChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: ['2019', '2020', '2021', '2022', '2023'],
+            datasets: [{
+                label: 'Gols por Temporada (Média)',
+                data: [18, 21, 23, 25, 27],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+});
+
+function viewPlayerStats(playerId) {
+    window.location.href = `/player/${playerId}`;
+}
+
+function manualUpdate() {
+    if (confirm('Deseja atualizar os dados agora? Isso pode levar alguns minutos.')) {
+        alert('Atualização iniciada. Os dados serão atualizados em breve.');
+        // Aqui você implementaria a chamada para atualizar os dados
+    }
+}
+</script>
+{% endblock %}

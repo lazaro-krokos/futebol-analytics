@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Times{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-trophy"></i> Times</h1>
+        <p class="text-muted">Estatísticas e desempenho dos times</p>
+    </div>
+</div>
+
+<div class="filters mb-4">
+    <div class="row">
+        <div class="col-md-4">
+            <label for="league-select" class="form-label">Liga</label>
+            <select class="form-select" id="league-select" onchange="applyFilters()">
+                <option value="">Todas as Ligas</option>
+                {% for league in leagues %}
+                <option value="{{ league.id }}" {% if selected_league == league.id|string %}selected{% endif %}>
+                    {{ league.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for team in teams %}
+    <div class="col-md-4 mb-4">
+        <div class="card team-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">{{ team.name }}</h5>
+                    <span class="badge bg-primary">{{ team.league.name if team.league else 'Sem Liga' }}</span>
+                </div>
+                
+                <div class="team-stats mb-3">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-value">{{ team.players|length }}</div>
+                            <div class="stat-label text-muted">Jogadores</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-value">-</div>
+                            <div class="stat-label text-muted">Vitórias</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-value">-</div>
+                            <div class="stat-label text-muted">Gols</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="bi bi-star"></i> Top Jogadores:</h6>
+                    <ul class="list-unstyled">
+                        {% for player in team.players[:3] %}
+                        <li class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <small>{{ player.name }}</small>
+                                <span class="badge bg-light text-dark">
+                                    {% if player.stats %}
+                                        {{ player.stats[-1].goals }}G {{ player.stats[-1].assists }}A
+                                    {% else %}
+                                        0G 0A
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <button class="btn btn-sm btn-outline-primary w-100" onclick="viewTeam({{ team.id }})">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not teams %}
+<div class="text-center py-5">
+    <h5 class="text-muted">Nenhum time encontrado</h5>
+    <p>Atualize os dados do sistema para carregar os times</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applyFilters() {
+    const league = document.getElementById('league-select').value;
+    window.location.href = `/teams${league ? '?league=' + league : ''}`;
+}
+
+function viewTeam(teamId) {
+    window.location.href = `/team/${teamId}`;
+}
+</script>
+
+<style>
+.team-card {
+    transition: transform 0.3s;
+}
+.team-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.stat-label {
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

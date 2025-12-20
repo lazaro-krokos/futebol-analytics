@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Início{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded text-center">
+    <h1 class="display-4">Futebol Analytics ⚽📊</h1>
+    <p class="lead">Sistema completo de análise de dados de futebol com estatísticas em tempo real.</p>
+    <hr class="my-4">
+    <p>Coletamos e analisamos dados de jogadores, times e ligas para fornecer insights valiosos.</p>
+    
+    {% if not current_user.is_authenticated %}
+    <div class="mt-4">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}" role="button">
+            <i class="bi bi-person-plus"></i> Criar Conta Gratuita
+        </a>
+        <a class="btn btn-outline-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">
+            <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </a>
+    </div>
+    {% else %}
+    <div class="mt-4">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('main.dashboard') }}" role="button">
+            <i class="bi bi-speedometer2"></i> Acessar Dashboard
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 mb-3">📊</div>
+                <h5 class="card-title">Análise Detalhada</h5>
+                <p class="card-text">Estatísticas avançadas de jogadores e times com métricas como xG, passes, defesas e muito mais.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 mb-3">⚽</div>
+                <h5 class="card-title">Dados em Tempo Real</h5>
+                <p class="card-text">Atualização automática de dados direto do FBref com web scraping agendado.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 mb-3">📈</div>
+                <h5 class="card-title">Relatórios Personalizados</h5>
+                <p class="card-text">Exporte dados em Excel para análise profunda e tomada de decisão baseada em dados.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Estatísticas Coletadas</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">✅ Gols, assistências, jogos</li>
+                    <li class="list-group-item">✅ xG (Expected Goals)</li>
+                    <li class="list-group-item">✅ Passes e posse de bola</li>
+                    <li class="list-group-item">✅ Defesas e faltas</li>
+                    <li class="list-group-item">✅ Tempos dos gols</li>
+                    <li class="list-group-item">✅ Previsões de placar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Funcionalidades</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">📱 Dashboard interativo</li>
+                    <li class="list-group-item">🔍 Filtros avançados</li>
+                    <li class="list-group-item">📊 Gráficos em tempo real</li>
+                    <li class="list-group-item">📥 Exportação Excel</li>
+                    <li class="list-group-item">🔐 Login seguro</li>
+                    <li class="list-group-item">📱 Design responsivo</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

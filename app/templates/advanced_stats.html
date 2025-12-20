@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+{% block title %}Estatísticas Avançadas{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1><i class="bi bi-bar-chart"></i> Estatísticas Avançadas</h1>
+        <p class="text-muted">Métricas detalhadas de xG, passes, defesas e muito mais</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="list-group">
+            <a href="#xg-analysis" class="list-group-item list-group-item-action active">
+                <i class="bi bi-graph-up"></i> Análise xG
+            </a>
+            <a href="#passing-stats" class="list-group-item list-group-item-action">
+                <i class="bi bi-arrow-left-right"></i> Estatísticas de Passes
+            </a>
+            <a href="#defensive-stats" class="list-group-item list-group-item-action">
+                <i class="bi bi-shield"></i> Estatísticas Defensivas
+            </a>
+            <a href="#possession-stats" class="list-group-item list-group-item-action">
+                <i class="bi bi-pie-chart"></i> Posse de Bola
+            </a>
+            <a href="#fouls-analysis" class="list-group-item list-group-item-action">
+                <i class="bi bi-exclamation-triangle"></i> Análise de Faltas
+            </a>
+            <a href="#goal-timing" class="list-group-item list-group-item-action">
+                <i class="bi bi-clock"></i> Tempos dos Gols
+            </a>
+            <a href="#correct-score" class="list-group-item list-group-item-action">
+                <i class="bi bi-percent"></i> Correct Score
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div id="xg-analysis" class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-bullseye"></i> Expected Goals (xG) Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="xgTrendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="xgVsGoalsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>Top Jogadores por xG</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Jogador</th>
+                                <th>xG</th>
+                                <th>Gols</th>
+                                <th>Diferença</th>
+                                <th>xG por 90min</th>
+                            </tr>
+                        </thead>
+                        <tbody id="xgTableBody">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="passing-stats" class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-arrow-repeat"></i> Estatísticas de Passes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <h3 id="avgPassAccuracy">0%</h3>
+                            <p class="text-muted">Precisão Média</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <h3 id="totalPasses">0</h3>
+                            <p class="text-muted">Total de Passes</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <h3 id="keyPassesPM">0</h3>
+                            <p class="text-muted">Passes Chave/p/jogo</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <h3 id="longBallAccuracy">0%</h3>
+                            <p class="text-muted">Precisão Bolas Longas</p>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="passingChart"></canvas>
+            </div>
+        </div>
+
+        <div id="defensive-stats" class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-shield-check"></i> Estatísticas Defensivas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Defensores/Goleiros</h6>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <span>Defesas por jogo:</span>
+                                <span class="float-end" id="savesPerMatch">0</span>
+                            </div>
+                            <div class="list-group-item">
+                                <span>Desarmes por jogo:</span>
+                                <span class="float-end" id="tacklesPerMatch">0</span>
+                            </div>
+                            <div class="list-group-item">
+                                <span>Interceptações por jogo:</span>
+                                <span class="float-end" id="interceptionsPerMatch">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <canvas id="defensiveRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="goal-timing" class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history"></i> Distribuição dos Tempos dos Gols</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="goalTimingChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6>Insights:</h6>
+                            <ul class="mb-0">
+                                <li id="firstHalfGoals">0 gols no 1º tempo</li>
+                                <li id="secondHalfGoals">0 gols no 2º tempo</li>
+                                <li id="lateGoals">0 gols após 75'</li>
+                                <li id="earlyGoals">0 gols antes de 15'</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="correct-score" class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-percent"></i> Previsões de Placar (Correct Score)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label>Time da Casa:</label>
+                        <select id="homeTeamSelect" class="form-select">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Time Visitante:</label>
+                        <select id="awayTeamSelect" class="form-select">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="getScorePredictions()">
+                            <i class="bi bi-calculator"></i> Gerar Previsões
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="predictionsResult" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Probabilidades de Placar:</h6>
+                            <table class="table table-sm">
+                                <tbody id="scoreProbabilities">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Outras Probabilidades:</h6>
+                            <div class="progress mb-2">
+                                <div id="bothTeamsScoreBar" class="progress-bar" style="width: 0%">
+                                    Ambos Marcam: 0%
+                                </div>
+                            </div>
+                            <div class="progress mb-2">
+                                <div id="over25Bar" class="progress-bar bg-success" style="width: 0%">
+                                    Mais de 2.5 Gols: 0%
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <div id="under25Bar" class="progress-bar bg-info" style="width: 0%">
+                                    Menos de 2.5 Gols: 0%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadXGAnalysis();
+    loadPassingStats();
+    loadDefensiveStats();
+    loadTeamsForPrediction();
+    loadGoalTiming();
+    
+    document.querySelectorAll('.list-group-item-action').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.list-group-item-action').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            const targetId = this.getAttribute('href').substring(1);
+            document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+});
+
+function loadXGAnalysis() {
+    fetch('/api/xg/analysis')
+        .then(response => response.json())
+        .then(data => {
+            updateXGCharts(data);
+            updateXGTable(data.players);
+        });
+}
+
+function updateXGCharts(data) {
+    const ctx1 = document.getElementById('xgTrendChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: data.dates,
+            datasets: [
+                {
+                    label: 'xG',
+                    data: data.xg_trend,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: true
+                },
+                {
+                    label: 'Gols Reais',
+                    data: data.goals_trend,
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true
+                }
+            ]
+        }
+    });
+    
+    const ctx2 = document.getElementById('xgVsGoalsChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Jogadores',
+                data: data.scatter_data || [
+                    {x: 5.2, y: 6}, {x: 8.7, y: 9}, {x: 3.1, y: 2},
+                    {x: 6.5, y: 7}, {x: 4.8, y: 5}
+                ],
+                backgroundColor: 'rgb(54, 162, 235)'
+            }]
+        }
+    });
+}
+
+function updateXGTable(players) {
+    const tbody = document.getElementById('xgTableBody');
+    tbody.innerHTML = '';
+    
+    players.forEach(player => {
+        const diff = player.goals - player.xg;
+        const diffClass = diff > 0 ? 'text-success' : diff < 0 ? 'text-danger' : '';
+        
+        const row = `
+            <tr>
+                <td>${player.name}</td>
+                <td>${player.xg.toFixed(1)}</td>
+                <td>${player.goals}</td>
+                <td class="${diffClass}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}</td>
+                <td>${player.xg_per_90.toFixed(2)}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+function loadPassingStats() {
+    fetch('/api/passing/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('avgPassAccuracy').textContent = `${data.avg_pass_accuracy.toFixed(1)}%`;
+            document.getElementById('totalPasses').textContent = data.total_passes.toLocaleString();
+            document.getElementById('keyPassesPM').textContent = data.key_passes_per_match.toFixed(1);
+            
+            const ctx = document.getElementById('passingChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Passes Curtos', 'Passes Longos', 'Cruzamentos', 'Passes Chave'],
+                    datasets: [{
+                        label: 'Por Partida',
+                        data: [
+                            data.short_passes_per_match || 45,
+                            data.long_passes_per_match || 12,
+                            data.crosses_per_match || 8,
+                            data.key_passes_per_match || 2.5
+                        ],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)'
+                        ]
+                    }]
+                }
+            });
+        });
+}
+
+function loadDefensiveStats() {
+    fetch('/api/defensive/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('savesPerMatch').textContent = data.saves_per_match.toFixed(1);
+            document.getElementById('tacklesPerMatch').textContent = data.tackles_per_match.toFixed(1);
+            document.getElementById('interceptionsPerMatch').textContent = data.interceptions_per_match.toFixed(1);
+            
+            const ctx = document.getElementById('defensiveRadarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Defesas', 'Desarmes', 'Interceptações', 'Cortes', 'Bloqueios', 'Faltas'],
+                    datasets: [{
+                        label: 'Time A',
+                        data: [
+                            data.saves_per_match || 3.2,
+                            data.tackles_per_match || 18.5,
+                            data.interceptions_per_match || 12.3,
+                            data.clearances_per_match || 22.1,
+                            data.blocks_per_match || 4.7,
+                            data.fouls_per_match || 13.8
+                        ],
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)'
+                    }]
+                }
+            });
+        });
+}
+
+function loadGoalTiming() {
+    fetch('/api/goal-timing/aggregated')
+        .then(response => response.json())
+        .then(data => {
+            updateGoalTimingChart(data);
+            updateGoalInsights(data);
+        });
+}
+
+function updateGoalTimingChart(data) {
+    const ctx = document.getElementById('goalTimingChart').getContext('2d');
+    
+    const labels = ['0-15', '16-30', '31-45', '46-60', '61-75', '76-90', 'Extra'];
+    const values = labels.map(label => data.time_distribution?.[label.replace('-', '_')] || 0);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Gols',
+                data: values,
+                backgroundColor: 'rgba(255, 99, 132, 0.5)'
+            }]
+        }
+    });
+}
+
+function updateGoalInsights(data) {
+    document.getElementById('firstHalfGoals').textContent = `${data.first_half_goals || 0} gols no 1º tempo`;
+    document.getElementById('secondHalfGoals').textContent = `${data.second_half_goals || 0} gols no 2º tempo`;
+    document.getElementById('lateGoals').textContent = `${(data.time_distribution?.['76_90'] || 0) + (data.time_distribution?.extra || 0)} gols após 75'`;
+    document.getElementById('earlyGoals').textContent = `${data.time_distribution?.['0_15'] || 0} gols antes de 15'`;
+}
+
+function loadTeamsForPrediction() {
+    fetch('/api/teams/list')
+        .then(response => response.json())
+        .then(teams => {
+            const homeSelect = document.getElementById('homeTeamSelect');
+            const awaySelect = document.getElementById('awayTeamSelect');
+            
+            teams.forEach(team => {
+                const option = `<option value="${team.id}">${team.name}</option>`;
+                homeSelect.innerHTML += option;
+                awaySelect.innerHTML += option;
+            });
+        });
+}
+
+function getScorePredictions() {
+    const homeTeamId = document.getElementById('homeTeamSelect').value;
+    const awayTeamId = document.getElementById('awayTeamSelect').value;
+    
+    if (!homeTeamId || !awayTeamId) {
+        alert('Selecione ambos os times');
+        return;
+    }
+    
+    fetch(`/api/correct-score/predictions?home_team=${homeTeamId}&away_team=${awayTeamId}`)
+        .then(response => response.json())
+        .then(data => displayScorePredictions(data));
+}
+
+function displayScorePredictions(data) {
+    const container = document.getElementById('predictionsResult');
+    container.style.display = 'block';
+    
+    const tbody = document.getElementById('scoreProbabilities');
+    tbody.innerHTML = '';
+    
+    Object.entries(data.probabilities).forEach(([score, prob]) => {
+        const row = `
+            <tr>
+                <td>${score}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar" style="width: ${prob}%">${prob}%</div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+    
+    document.getElementById('bothTeamsScoreBar').style.width = `${data.both_teams_score}%`;
+    document.getElementById('bothTeamsScoreBar').textContent = `Ambos Marcam: ${data.both_teams_score}%`;
+    document.getElementById('over25Bar').style.width = `${data.over_2_5}%`;
+    document.getElementById('over25Bar').textContent = `Mais de 2.5 Gols: ${data.over_2_5}%`;
+    document.getElementById('under25Bar').style.width = `${data.under_2_5}%`;
+    document.getElementById('under25Bar').textContent = `Menos de 2.5 Gols: ${data.under_2_5}%`;
+}
+</script>
+{% endblock %}

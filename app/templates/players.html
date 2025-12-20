@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Jogadores{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1><i class="bi bi-people"></i> Jogadores</h1>
+        <p class="text-muted">Busque e filtre jogadores por diversas estatísticas</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-primary" onclick="exportData('excel')">
+            <i class="bi bi-download"></i> Exportar Excel
+        </button>
+    </div>
+</div>
+
+<div class="filters mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label for="league-select" class="form-label">Liga</label>
+            <select class="form-select" id="league-select">
+                <option value="">Todas as Ligas</option>
+                {% for league in leagues %}
+                <option value="{{ league.id }}" {% if selected_league == league.id|string %}selected{% endif %}>
+                    {{ league.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="team-select" class="form-label">Time</label>
+            <select class="form-select" id="team-select">
+                <option value="">Todos os Times</option>
+                {% for team in teams %}
+                <option value="{{ team.id }}" {% if selected_team == team.id|string %}selected{% endif %}>
+                    {{ team.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="position-select" class="form-label">Posição</label>
+            <select class="form-select" id="position-select">
+                <option value="">Todas as Posições</option>
+                <option value="GK" {% if selected_position == 'GK' %}selected{% endif %}>Goleiro</option>
+                <option value="DF" {% if selected_position == 'DF' %}selected{% endif %}>Defensor</option>
+                <option value="MF" {% if selected_position == 'MF' %}selected{% endif %}>Meio-campista</option>
+                <option value="FW" {% if selected_position == 'FW' %}selected{% endif %}>Atacante</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                <i class="bi bi-funnel"></i> Aplicar Filtros
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Jogador</th>
+                        <th>Time</th>
+                        <th>Posição</th>
+                        <th>Jogos</th>
+                        <th>Gols</th>
+                        <th>Assistências</th>
+                        <th>xG</th>
+                        <th>xA</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td>{{ player.name }}</td>
+                        <td>{{ player.team.name if player.team else '-' }}</td>
+                        <td>
+                            {% if player.position == 'GK' %}
+                            <span class="badge bg-secondary">Goleiro</span>
+                            {% elif player.position == 'DF' %}
+                            <span class="badge bg-info">Defensor</span>
+                            {% elif player.position == 'MF' %}
+                            <span class="badge bg-success">Meio-campista</span>
+                            {% elif player.position == 'FW' %}
+                            <span class="badge bg-danger">Atacante</span>
+                            {% else %}
+                            <span class="badge bg-dark">{{ player.position }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ player.stats[-1].matches_played if player.stats else 0 }}</td>
+                        <td>{{ player.stats[-1].goals if player.stats else 0 }}</td>
+                        <td>{{ player.stats[-1].assists if player.stats else 0 }}</td>
+                        <td>{{ player.stats[-1].xg if player.stats else 0 }}</td>
+                        <td>{{ player.stats[-1].xa if player.stats else 0 }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="viewPlayerStats({{ player.id }})">
+                                <i class="bi bi-eye"></i> Detalhes
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not players %}
+        <div class="text-center py-5">
+            <h5 class="text-muted">Nenhum jogador encontrado com os filtros atuais</h5>
+            <p>Tente ajustar os filtros ou atualizar os dados do sistema</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">Anterior</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Próxima</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applyFilters() {
+    const league = document.getElementById('league-select').value;
+    const team = document.getElementById('team-select').value;
+    const position = document.getElementById('position-select').value;
+    
+    let url = '/players?';
+    if (league) url += `league=${league}&`;
+    if (team) url += `team=${team}&`;
+    if (position) url += `position=${position}`;
+    
+    window.location.href = url;
+}
+
+function viewPlayerStats(playerId) {
+    window.location.href = `/player/${playerId}`;
+}
+
+function exportData(format) {
+    const league = document.getElementById('league-select').value;
+    const team = document.getElementById('team-select').value;
+    const position = document.getElementById('position-select').value;
+    
+    let url = `/export/players?format=${format}`;
+    if (league) url += `&league=${league}`;
+    if (team) url += `&team=${team}`;
+    if (position) url += `&position=${position}`;
+    
+    window.location.href = url;
+}
+
+document.getElementById('league-select').addEventListener('change', function() {
+    const leagueId = this.value;
+    if (!leagueId) return;
+    
+    fetch(`/api/teams_by_league?league=${leagueId}`)
+        .then(response => response.json())
+        .then(data => {
+            const teamSelect = document.getElementById('team-select');
+            teamSelect.innerHTML = '<option value="">Todos os Times</option>';
+            
+            data.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.id;
+                option.textContent = team.name;
+                if (team.id == {{ selected_team|default('0') }}) {
+                    option.selected = true;
+                }
+                teamSelect.appendChild(option);
+            });
+        });
+});
+</script>
+{% endblock %}
