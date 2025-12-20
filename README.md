@@ -27,7 +27,7 @@ Sistema completo de análise de dados de futebol com coleta automática de estat
 
 
 
-\## 🛠️ Tecnologias
+## 🛠️ Tecnologias
 
 
 
